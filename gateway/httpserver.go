@@ -1,9 +1,9 @@
 package gateway
 
 import (
+	"cmpp-gateway/pages"
 	"encoding/json"
 	"fmt"
-	"github.com/JoeCao/cmpp-gateway/pages"
 	"html/template"
 	"log"
 	"net/http"
@@ -56,6 +56,7 @@ func findTemplate(w http.ResponseWriter, r *http.Request, tpl string) {
 func listMessage(w http.ResponseWriter, r *http.Request, listName string) {
 	r.ParseForm()
 	parameter := r.Form.Get("page")
+
 	var c_page int
 	if parameter == "" {
 		c_page = 1
@@ -81,6 +82,24 @@ func listMessage(w http.ResponseWriter, r *http.Request, listName string) {
 	}
 }
 
+func messages(w http.ResponseWriter, r *http.Request, listName string) {
+
+	v := SCache.GetList(listName, 0, 1000)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	result, _ := json.Marshal(
+		map[string]interface{}{"data": v})
+
+	fmt.Fprintf(w, string(result))
+
+}
+
+func messages_in(w http.ResponseWriter, r *http.Request) {
+	messages(w, r, "list_mo")
+}
+func messages_out(w http.ResponseWriter, r *http.Request) {
+	messages(w, r, "list_message")
+}
+
 func listSubmits(w http.ResponseWriter, r *http.Request) {
 	listMessage(w, r, "list_message")
 }
@@ -90,7 +109,10 @@ func listMo(w http.ResponseWriter, r *http.Request) {
 }
 
 func Serve(config *Config) {
+
 	http.HandleFunc("/send", handler)
+	http.HandleFunc("/messages_in", messages_in)
+	http.HandleFunc("/messages_out", messages_out)
 	http.HandleFunc("/", index)
 	http.HandleFunc("/list_message", listSubmits)
 	http.HandleFunc("/list_mo", listMo)

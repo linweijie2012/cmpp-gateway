@@ -1,9 +1,9 @@
 package main
 
 import (
+	"cmpp-gateway/gateway"
 	"encoding/json"
 	"flag"
-	"github.com/JoeCao/cmpp-gateway/gateway"
 	"io/ioutil"
 	"log"
 	"os"
@@ -28,7 +28,6 @@ func main() {
 		log.Fatal("加载失败 ", configPath, " => ", err)
 	}
 	go gateway.StartClient(config)
-	go gateway.StartCmdLine()
 
 	go gateway.StartCache(config)
 	defer gateway.StopCache()

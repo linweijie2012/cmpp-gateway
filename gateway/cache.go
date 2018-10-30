@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
 	"log"
 	"strconv"
+
+	"github.com/garyburd/redigo/redis"
 )
 
 type Cache struct {
@@ -55,8 +56,8 @@ func (c *Cache) AddSubmits(mes *SmsMes) {
 	data, _ := json.Marshal(mes)
 	//新的记录加在头部,自然就倒序排列了
 	c.conn.Do("LPUSH", "list_message", data)
-	//只保留最近五十条
-	//c.conn.Do("LTRIM", "submitlist", "0", "49")
+	//只保留最近1000条
+	c.conn.Do("LTRIM", "submitlist", "0", "999")
 }
 
 func (c *Cache) AddMoList(mes *SmsMes) {
@@ -64,8 +65,8 @@ func (c *Cache) AddMoList(mes *SmsMes) {
 	data, _ := json.Marshal(mes)
 	//新的记录加在头部,自然就倒序排列了
 	c.conn.Do("LPUSH", "list_mo", data)
-	//只保留最近五十条
-	//c.conn.Do("LTRIM", "molist", "0", "49")
+	//只保留最近1000条
+	c.conn.Do("LTRIM", "molist", "0", "999")
 }
 
 func (c *Cache) Length(listName string) int {
