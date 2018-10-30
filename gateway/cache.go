@@ -11,7 +11,9 @@ import (
 )
 
 type Cache struct {
-	conn redis.Conn
+	conn      redis.Conn
+	listStart string
+	listEnd   string
 }
 
 var SCache Cache = Cache{}
@@ -24,6 +26,9 @@ func StartCache(config *Config) {
 		SCache.conn = conn
 		log.Printf("连接Redis %s 成功", config.RedisHost+":"+config.RedisPort)
 	}
+
+	SCache.listStart = config.ListStart
+	SCache.listEnd = config.ListEnd
 }
 
 func StopCache() {
@@ -57,7 +62,7 @@ func (c *Cache) AddSubmits(mes *SmsMes) {
 	//新的记录加在头部,自然就倒序排列了
 	c.conn.Do("LPUSH", "list_message", data)
 	//只保留最近1000条
-	c.conn.Do("LTRIM", "submitlist", "0", "999")
+	c.conn.Do("LTRIM", "submitlist", c.listStart, c.listEnd)
 }
 
 func (c *Cache) AddMoList(mes *SmsMes) {
@@ -66,7 +71,7 @@ func (c *Cache) AddMoList(mes *SmsMes) {
 	//新的记录加在头部,自然就倒序排列了
 	c.conn.Do("LPUSH", "list_mo", data)
 	//只保留最近1000条
-	c.conn.Do("LTRIM", "molist", "0", "999")
+	c.conn.Do("LTRIM", "molist", c.listStart, c.listEnd)
 }
 
 func (c *Cache) Length(listName string) int {
@@ -77,8 +82,8 @@ func (c *Cache) Length(listName string) int {
 	return size
 }
 
-func (c *Cache) GetList(listName string, start, end int) *[]SmsMes {
-	values, err := redis.Strings(c.conn.Do("LRANGE", listName, start, end))
+func (c *Cache) GetList(listName string, msisdn string) *[]SmsMes {
+	values, err := redis.Strings(c.conn.Do("LRANGE", listName, c.listStart, c.listEnd))
 	if err != nil {
 		fmt.Println(err)
 		//返回空对象
@@ -88,7 +93,11 @@ func (c *Cache) GetList(listName string, start, end int) *[]SmsMes {
 	for _, s := range values {
 		mes := SmsMes{}
 		json.Unmarshal([]byte(s), &mes)
+		if msisdn != "" && mes.Dest != msisdn {
+			continue
+		}
 		v = append(v, mes)
+
 	}
 	return &v
 }

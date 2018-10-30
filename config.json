@@ -9,5 +9,8 @@
   "cmpp_port": "17890",
   "debug": true,
   "redis_host": "www.edaoduo.com",
-  "redis_port": "16379"
+  "redis_port": "16379",
+  "list_start": "0",
+  "list_end": "999"
+
 }

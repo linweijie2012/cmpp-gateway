@@ -23,7 +23,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if src == "" || content == "" || dest == "" {
 		result, _ := json.Marshal(
-			map[string]interface{}{"result": -1, "error": "请输入 参数'src' 'dest' 'const' 缺一不可"})
+			map[string]interface{}{"result": -1, "error": "请输入 参数'src' 'dest' 'cont' 缺一不可"})
 		fmt.Fprintf(w, string(result))
 		return
 	}
@@ -70,7 +70,7 @@ func listMessage(w http.ResponseWriter, r *http.Request, listName string) {
 		fmt.Fprintf(w, "template error %v", err)
 		return
 	}
-	v := SCache.GetList(listName, page.StartRow, page.EndRow)
+	v := SCache.GetList(listName, "")
 	ret := map[string]interface{}{
 		"data": v,
 		"page": page,
@@ -83,8 +83,9 @@ func listMessage(w http.ResponseWriter, r *http.Request, listName string) {
 }
 
 func messages(w http.ResponseWriter, r *http.Request, listName string) {
-
-	v := SCache.GetList(listName, 0, 1000)
+	r.ParseForm()
+	msisdn := r.Form.Get("msisdn")
+	v := SCache.GetList(listName, msisdn)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	result, _ := json.Marshal(
 		map[string]interface{}{"data": v})
@@ -93,10 +94,10 @@ func messages(w http.ResponseWriter, r *http.Request, listName string) {
 
 }
 
-func messages_in(w http.ResponseWriter, r *http.Request) {
+func messagesIn(w http.ResponseWriter, r *http.Request) {
 	messages(w, r, "list_mo")
 }
-func messages_out(w http.ResponseWriter, r *http.Request) {
+func messagesOut(w http.ResponseWriter, r *http.Request) {
 	messages(w, r, "list_message")
 }
 
@@ -111,10 +112,10 @@ func listMo(w http.ResponseWriter, r *http.Request) {
 func Serve(config *Config) {
 
 	http.HandleFunc("/send", handler)
-	http.HandleFunc("/messages_in", messages_in)
-	http.HandleFunc("/messages_out", messages_out)
-	http.HandleFunc("/", index)
-	http.HandleFunc("/list_message", listSubmits)
-	http.HandleFunc("/list_mo", listMo)
+	http.HandleFunc("/messages_in", messagesIn)
+	http.HandleFunc("/messages_out", messagesOut)
+	//http.HandleFunc("/", index)
+	//http.HandleFunc("/list_message", listSubmits)
+	//http.HandleFunc("/list_mo", listMo)
 	log.Fatal(http.ListenAndServe(config.HttpHost+":"+config.HttpPort, nil))
 }

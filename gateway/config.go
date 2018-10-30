@@ -24,6 +24,8 @@ type Config struct {
 	Debug     bool   `json:"debug"`
 	RedisHost string `json:"redis_host"`
 	RedisPort string `json:"redis_port"`
+	ListStart string `json:"list_start"`
+	ListEnd   string `json:"list_end"`
 }
 
 func (c *Config) LoadFile(path string) {
